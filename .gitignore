@@ -43,3 +43,8 @@ $RECYCLE.BIN/
 *.msi
 *.msm
 *.msp
+*.prefs
+
+dep/
+.project
+.classpath

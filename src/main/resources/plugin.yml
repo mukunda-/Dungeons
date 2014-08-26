@@ -1,0 +1,17 @@
+name: Dungeons
+main: com.mukunda.dungeons.Dungeons
+version: "${project.version}"
+softdepend:
+  - MultiInv
+  - Denizens
+depend:
+  - WorldEdit
+  - Parties
+  - Multiverse-Core
+  - WorldGuard
+#  - Multiverse-Inventories
+commands:
+  dgn:
+    description: Modify dungeon parameters
+    usage: /dgn help
+    permission: dungeons.manage

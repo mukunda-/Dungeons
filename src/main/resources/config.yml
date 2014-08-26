@@ -1,0 +1,21 @@
+Dungeons:
+  
+  # default dungeon settings, these may be overridden by dungeon configs
+  default_options:
+  
+    # banned potions
+    potions:
+      2: no
+      
+    # max players allowed in dungeons
+    max_players: 1
+     
+    # allow ender pearls
+    pearls: no
+        
+    # inventory to share with
+    multiinv_share: default
+    
+  startup_commands:
+  - /broadcast testes
+    

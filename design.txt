@@ -1,0 +1,45 @@
+instances plugin definition:
+
+INSTANCE HAS
+
+name of world	 
+entry point
+entry portal
+region of dungeon area, to control persistant caching
+subregions of dungeon areas of interest, to control block protection
+
+exit portal
+exit point
+commands to execute at start
+commands to execute at finish
+instances should be kept in memory 
+share dungeon if entry at same time
+max players
+difficulty scaling
+
+keepinventory
+block teleport commands
+block ender pearls
+disallow potion effects
+
+define regions with worldedit
+share inventory with multiverse
+
+/dgn <name> delete
+/dgn <name> entry_point
+/dgn <name> entry_portal
+/dgn <name> exit_point
+/dgn <name> exit_portal
+/dgn <name> setarea
+/dgn <name> disable
+/dgn <name> enable
+
+unload world
+
+in config:
+	gamerules
+	potion effects disallowed
+	disallow ender pearls
+	difficulty
+	maxplayers
+	pvp
