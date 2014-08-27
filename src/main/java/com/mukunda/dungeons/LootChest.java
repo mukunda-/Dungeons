@@ -2,6 +2,7 @@ package com.mukunda.dungeons;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap; 
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID; 
 
@@ -26,30 +27,68 @@ import com.comphenix.protocol.events.PacketContainer;
 public class LootChest {
 	Instance instance;
 	Location location;
+	Location source;
+	LootChestInfo info;
 	private HashMap<UUID,Inventory> inventories = new HashMap<UUID,Inventory>();
+	private HashSet<UUID> playerListWhenSpawned = new HashSet<UUID>();
+
+	
+	public static class InvalidLootException extends Exception {
+		 
+		private static final long serialVersionUID = 1L;
+
+		public InvalidLootException(String message) {
+			super(message);
+		}
+	}
 	
 	//-------------------------------------------------------------------------------------------------
 	private static void placeChest( World world, Location location ) {
 		Block block = world.getBlockAt(location);
 		block.setType( Material.CHEST ); 
 	}
+	 
 	
-	//-------------------------------------------------------------------------------------------------
-	public static LootChest create( Instance instance, Location source, Location dest ) {
+	public LootChest( Instance instance, LootChestInfo info ) throws InvalidLootException {
+		this.instance = instance;
+		this.info = info;
+		
 		
 		World world = instance.getWorld();
-		if( world == null ) return null;
+		if( world == null ) throw new InvalidLootException( "World is not present." );
+		Location source = new Location( 
+				world, 
+				info.sourcePoint.getBlockX(),
+				info.sourcePoint.getBlockY(),
+				info.sourcePoint.getBlockZ() );
+		this.source = source;
+		this.location = new Location(
+				world,
+				info.spawnPoint.getBlockX(),
+				info.spawnPoint.getBlockY(),
+				info.spawnPoint.getBlockZ() );
+		
 		Block block = source.getBlock();
-		if( block == null ) return null;
+		if( block == null ) throw new InvalidLootException( "Source chest is not present." );
 		BlockState blockState = block.getState();
-		if( !(blockState instanceof Chest) ) return null;
-		Chest sourceChest = (Chest)blockState; 
+		if( !(blockState instanceof Chest) ) throw new InvalidLootException( "Source chest is not present." );
+		//Chest sourceChest = (Chest)blockState; 
 		
-		return new LootChest( instance, dest, sourceChest.getInventory() );
+		List<Player> players = instance.getWorld().getPlayers();
+		 
+		placeChest( instance.getWorld(), location );
+		// TODO effect
 		
+		for( Player player : players ) {
+			 
+			playerListWhenSpawned.add( player.getUniqueId() ); 
+		}
+		if( !info.giveAll ) {
+			instance.setLocked();
+		}
 	}
-	
-	private void loadInventory( Inventory dest, Inventory source ) {
+
+	private void generateBooty( Inventory dest, Inventory source ) {
 		// getSize()-1 because we are checking two entries together
 		for( int i = 0; i < source.getSize()-1; i++ ) {
 			
@@ -86,29 +125,39 @@ public class LootChest {
 		}
 	}
 	
-	private LootChest( Instance instance, Location location, Inventory source ) {
-		this.instance = instance;
-		this.location = location;
-		
-		List<Player> players = instance.getWorld().getPlayers();
-		 
-		placeChest( instance.getWorld(), location );
-		// TODO effect
-		
-		for( Player player : players ) {
-			Inventory booty = Bukkit.getServer().createInventory( null, 9, "Spoils" );
-			loadInventory( booty, source  ); 
-			inventories.put( player.getUniqueId(), booty );
-			
-			// loot was generated for player, create dungeon lock
-			Dungeons.getContext().userData.setCooldown( player, instance.getDungeon() );
-		}
-	}
-	
 	public boolean openChest( Player player ) {
 		Inventory inventory = inventories.get( player.getUniqueId() );
 		if( inventory == null ) {
-			return false;
+			if( !info.giveAll && !playerListWhenSpawned.contains(player.getUniqueId()) ) {
+				// not giveall mode, only spawn loot for players who were present.
+				return false;
+			}
+			
+			Block block = source.getBlock();
+			if( block == null ) {
+				Dungeons.getContext().getLogger().warning( 
+						"A loot chest is missing it's source. instance=" 
+						+ instance.getWorld().getName() );
+				return false; // the source loot was destroyed!
+			}
+			BlockState blockState = block.getState();
+			if( blockState == null || !(blockState instanceof Chest) ) {
+				Dungeons.getContext().getLogger().warning( 
+						"A loot chest is missing it's source. instance=" 
+						+ instance.getWorld().getName() );
+				return false; // the source loot was destroyed!
+			}
+			
+			Inventory booty = Bukkit.getServer().createInventory( null, 9, "Spoils" );
+			generateBooty( booty, ((Chest)blockState).getInventory()  ); 
+			inventories.put( player.getUniqueId(), booty );
+			
+			// player has accessed his loot, create dungeon lock
+			Dungeons.getContext().userData.setCooldown( player, instance.getDungeon() );
+			instance.setLockedPlayer( player );
+			
+			inventory = booty;
+			
 		}
 		player.openInventory( inventory );
 		  

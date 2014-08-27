@@ -14,8 +14,7 @@ public class EnableCommand extends DungeonCommand {
 	}
 	public void printUsage( CommandSender sender ) {
 		Commands.reply( sender, "Usage: /dgn enable <name>" );
-		Commands.reply( sender, "Enables a dungeon. Use this when you are done with the configuration." );
-		Commands.reply( sender, "You also need to unload the dungeon world from your server." );
+		Commands.reply( sender, "Enables a dungeon. Use this when you are done with the configuration." ); 
 	}
 	public void run( CommandSender sender, String[] args ) {
 		DungeonConfig config = CommandHelper.getDungeonConfig( sender, args[1] );

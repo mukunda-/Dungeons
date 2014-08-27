@@ -3,11 +3,9 @@ package com.mukunda.dungeons.commands;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.mukunda.dungeons.Cuboid;
 import com.mukunda.dungeons.DungeonConfig;
 import com.mukunda.dungeons.Dungeons;
 import com.mukunda.dungeons.LootChestInfo;
-import com.sk89q.worldedit.bukkit.selections.Selection;
 
 public class LootUnlinkCommand extends DungeonCommand {
 	public LootUnlinkCommand() {

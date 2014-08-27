@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.io.File;
@@ -40,6 +41,9 @@ public class Instance {
 	private boolean unloadCommandsRun;
 	
 	private ArrayList<LootChest> lootChests = new ArrayList<LootChest>();
+	
+	private HashSet<UUID> lockedPlayers = new HashSet<UUID>();
+	private boolean locked;
 
 	public String instanceWorld;
 	
@@ -376,5 +380,21 @@ public class Instance {
 			if( loot.isAtLocation(location) ) return loot;
 		}
 		return null;
+	}
+	
+	public void setLockedPlayer( Player player ) {
+		lockedPlayers.add(player.getUniqueId());
+	}
+	
+	public void setLocked() {
+		locked = true;
+	}
+	
+	public boolean isLocked() {
+		return locked;
+	}
+	
+	public boolean isPlayerLocked( Player player ) {
+		return lockedPlayers.contains( player.getUniqueId() );
 	}
 }

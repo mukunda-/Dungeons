@@ -8,7 +8,6 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin; 
 import org.bukkit.util.Vector;
-import org.bukkit.util.permissions.BroadcastPermissions;
 import org.bukkit.block.Chest;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -28,6 +27,7 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.event.world.ChunkUnloadEvent;
@@ -37,13 +37,13 @@ import org.bukkit.inventory.InventoryHolder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path; 
 import java.nio.file.FileVisitResult;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.io.IOException;
@@ -58,8 +58,10 @@ import java.io.IOException;
 
 import com.mukunda.dungeons.commands.AreaCommand;
 import com.mukunda.dungeons.commands.Commands;
+import com.mukunda.dungeons.commands.CooldownCommand;
 import com.mukunda.dungeons.commands.CreateCommand;
 import com.mukunda.dungeons.commands.DeleteCommand;
+import com.mukunda.dungeons.commands.DenizenKeyCommand;
 import com.mukunda.dungeons.commands.DisableCommand;
 import com.mukunda.dungeons.commands.EnableCommand;
 import com.mukunda.dungeons.commands.EntryPointCommand;
@@ -83,15 +85,19 @@ import com.onarandombox.MultiverseCore.api.MultiverseWorld;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 
 // TODO:
-// respawn at dungeon start
-// cooldowns
+// respawn at dungeon start DUN NEED TEST
+// cooldowns DUN NEED TEST
 // block chunk unloading DONE 
 // max players DONE,NEEDSTEST
 // npc cleanup, denizen script? DUN
+// allow teleport commands, and instead just check if they can enter an instance, and redirect them to entrance. DUN NEED TEST
+// KEYS DUN NEED TEST
+// slow down gnome
+// remove debug shit
 
 public final class Dungeons extends JavaPlugin implements Listener {
 	
-	public HashMap<String,Boolean> blockedCommands;
+	public HashSet<String> blockedCommands;
 	
 	public ArrayList<DungeonConfig> configs;
 	public DungeonOptions defaultOptions;
@@ -256,7 +262,7 @@ public final class Dungeons extends JavaPlugin implements Listener {
 	
 	//---------------------------------------------------------------------------------------------
 	private void disableDungeonCommand( String command ) {
-		blockedCommands.put( command, true );
+		blockedCommands.add( command );
 	}
 	
 	//---------------------------------------------------------------------------------------------
@@ -264,19 +270,19 @@ public final class Dungeons extends JavaPlugin implements Listener {
     public void onEnable() {
 		saveDefaultConfig();
 		
-		blockedCommands = new HashMap<>();
-		disableDungeonCommand( "/home" );
+		blockedCommands = new HashSet<String>();
+		//disableDungeonCommand( "/home" );
 		disableDungeonCommand( "/sethome" );
-		disableDungeonCommand( "/tp" );
+		//disableDungeonCommand( "/tp" );
 		disableDungeonCommand( "/top" );
-		disableDungeonCommand( "/tphere" );
-		disableDungeonCommand( "/tpahere" );
+		//disableDungeonCommand( "/tphere" );
+		//disableDungeonCommand( "/tpahere" );
 		disableDungeonCommand( "/tppos" );
-		disableDungeonCommand( "/teleport" );
-		disableDungeonCommand( "/tpa" );
-		disableDungeonCommand( "/back" );
-		disableDungeonCommand( "/warp" );
-		disableDungeonCommand( "/spawn" );
+		//disableDungeonCommand( "/teleport" );
+		//disableDungeonCommand( "/tpa" );
+		//disableDungeonCommand( "/back" );
+		//disableDungeonCommand( "/warp" );
+		//disableDungeonCommand( "/spawn" );
 		disableDungeonCommand( "/world" );
 		
 		defaultOptions = new DungeonOptions();
@@ -319,7 +325,9 @@ public final class Dungeons extends JavaPlugin implements Listener {
 		commands.register( new LootListCommand() );
 		commands.register( new LootTagCommand() );
 		commands.register( new LootUnlinkCommand() );
+		commands.register( new CooldownCommand() );
 		//commands.register( new SaveCommand( this ) );
+		commands.register( new DenizenKeyCommand() );
 		
 		// TODO slow gnome down.
 		new Gnome().runTaskTimer( this, 20, 5 );
@@ -371,8 +379,36 @@ public final class Dungeons extends JavaPlugin implements Listener {
     	return false;
     }
     
+    private void showCooldownMessage( Player player, DungeonConfig config ) {
+    	if( config.cooldown == CooldownType.DAY ) {
+			player.sendMessage( ChatColor.BLUE + "You are not allowed to enter that dungeon again today." );
+		} else if( config.cooldown == CooldownType.WEEK ) {
+			player.sendMessage( ChatColor.BLUE + "You are not allowed to enter that dungeon again this week." );
+		} else {
+			player.sendMessage( ChatColor.BLUE + "You are not allowed to enter that dungeon again." );
+		}
+    }
+    
     public void enterDungeon( Player player, DungeonConfig config ) {
+    	
+    	String dkey = config.getDenizenKey();
+    	if( dkey != null ) {
+    		if( !DenizenFlagChecker.playerHasDenizenFlag( player, dkey ) ) {
+    			player.sendMessage( ChatColor.BLUE + "You have not completed the required quest to enter this dungeon." );
+    			return;
+    		}
+    	}
+    	
     	Parties parties = (Parties)Bukkit.getServer().getPluginManager().getPlugin("Parties");
+    	
+    	if( parties.getParty(player) == null ) {
+    		if( userData.hasCooldown( player, config ) ) {
+    			showCooldownMessage( player, config );
+	    		return;
+    		}
+    		
+    	}
+    	
 		parties.ensureInParty( player );
 		Party party = parties.getParty( player );
 		
@@ -380,13 +416,27 @@ public final class Dungeons extends JavaPlugin implements Listener {
 		for( Instance instance : instances ) {
 			if( instance.getDungeon() == config && instance.getParty() == party ) {
 				if( instance.isSettingUp() ) return;
- 
+				if( !instance.isPlayerLocked( player ) ) {
+					if( userData.hasCooldown( player, config ) ) {
+						showCooldownMessage( player, config );
+						
+						return;
+					} else if( instance.isLocked() ) {					
+						player.sendMessage( ChatColor.BLUE + "You may not enter this dungeon in progress." );
+						return;
+					} 
+				}  
+				
 				instance.teleportPlayerEntry( player );
-				 
+				
 				return;
 			}
 		}
 		
+		if( userData.hasCooldown( player, config ) ) {
+			showCooldownMessage( player, config );
+			return;
+		}
 	 
 		// create new instance
 		// players will be teleported when it's done.
@@ -410,6 +460,7 @@ public final class Dungeons extends JavaPlugin implements Listener {
 				 return;
     		}
     	}
+    	
     	for( DungeonConfig config : configs ) {
     		
 			if( event.getFrom().getWorld().getName().equals(config.entryPortalWorld) && 
@@ -503,7 +554,7 @@ public final class Dungeons extends JavaPlugin implements Listener {
     }
     
 	//---------------------------------------------------------------------------------------------
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled=true)
     public void onTeleport( PlayerTeleportEvent event ) {
    	 
     	// stop player from teleporting to someone in an instance
@@ -514,10 +565,12 @@ public final class Dungeons extends JavaPlugin implements Listener {
     		Player player = event.getPlayer();
     		Party party = parties.getParty( player );
     		
-    		for( Instance instance : instances ) {
-    			if( instance.getParty() == party &&
-    					instance.getWorld() == event.getTo().getWorld() ) {
+    		Instance instance = getInstance( event.getTo().getWorld() );
+    		if( instance != null ) {
+    			if( instance.getParty() == party ) {
     				DungeonConfig d = instance.getDungeon();
+    				
+    				// handle blocking ender pearls (maybe just let WorldGuard handle this?)
     				if( event.getCause() == TeleportCause.ENDER_PEARL ) {
     					if( !d.options.allowPearls() ){
 
@@ -527,6 +580,39 @@ public final class Dungeons extends JavaPlugin implements Listener {
     					return;
     				}
     				
+    				if( instance.isSettingUp() ) {
+    		    		event.setCancelled(true); // silent failure, this is a rare case.
+    					return;
+    				}
+    				
+    				String dkey = d.getDenizenKey();
+    		    	if( dkey != null ) {
+    		    		if( DenizenFlagChecker.playerHasDenizenFlag( player, dkey ) ) {
+    		    			player.sendMessage( ChatColor.BLUE + "You have not completed the required quest to enter this dungeon." );
+    		    			event.setCancelled(true);
+    						
+    		    			return;
+    		    		}
+    		    	}
+    				
+    				if( !instance.isPlayerLocked( player ) ) {
+    					if( userData.hasCooldown( player, d ) ) {
+    						showCooldownMessage( player, d );
+    			    		event.setCancelled(true);
+    						
+    						return;
+    					} else if( instance.isLocked() ) {					
+    						player.sendMessage( ChatColor.BLUE + "Can't teleport; the dungeon is locked." );
+    			    		event.setCancelled(true);
+    						return;
+    					} 
+    				}  
+    				
+    				//instance.teleportPlayerEntry( player );
+    				
+    				//if( instance.)
+    				
+    				// redirect to dungeon entrance
     				event.setTo( 
     						new Location( 
     								event.getTo().getWorld(),
@@ -540,8 +626,7 @@ public final class Dungeons extends JavaPlugin implements Listener {
     				instance.refreshAccessTime();
     				return;
     			}
-    			
-        	}
+    		}
     		event.setCancelled(true);
     		player.sendMessage( ChatColor.RED + "You aren't allowed to teleport there." );
     	}
@@ -568,6 +653,23 @@ public final class Dungeons extends JavaPlugin implements Listener {
     	}, 60);
 		 
     }
+    
+    @EventHandler(priority=EventPriority.HIGH)
+    public void onRespawnEvent( PlayerRespawnEvent event ) {
+    	Player player = event.getPlayer();
+    	if( player.getWorld().getName().startsWith( "instances/" ) ) {
+    		Instance instance = getInstance( player.getWorld().getName() );
+    		if( instance == null ) return; //error
+    		event.setRespawnLocation( new Location( 
+    				instance.getWorld(), 
+    				instance.getDungeon().entryPoint.getX(),
+    				instance.getDungeon().entryPoint.getY(),
+    				instance.getDungeon().entryPoint.getZ(),
+    				instance.getDungeon().entryAngle,
+    				0 ) );
+    	}
+    	 
+    }
     //---------------------------------------------------------------------------------------------
     @EventHandler
     public void onPlayerCommand( PlayerCommandPreprocessEvent event ) {
@@ -578,7 +680,7 @@ public final class Dungeons extends JavaPlugin implements Listener {
     	Player player = event.getPlayer();
     	if( player.getWorld().getName().startsWith( "instances/" ) ) {
     		String command = event.getMessage().split(" ")[0].toLowerCase();
-    		Boolean blocked = blockedCommands.get(command); 
+    		Boolean blocked = blockedCommands.contains(command); 
     		if( blocked != null && blocked == true ) {
     			player.sendMessage( ChatColor.RED + "You can't use that command in here. To exit the dungeon use /leave." );
     			event.setCancelled(true);
@@ -687,18 +789,14 @@ public final class Dungeons extends JavaPlugin implements Listener {
     		return;
     	}
     	
-    	LootChest loot = LootChest.create( 
-    			instance, 
-    			new Location( instance.getWorld(), 
-    					info.sourcePoint.getBlockX(), 
-    					info.sourcePoint.getBlockY(), 
-    					info.sourcePoint.getBlockZ() ),
-    			new Location( instance.getWorld(),
-    					info.spawnPoint.getBlockX(),
-    					info.spawnPoint.getBlockY(),
-    					info.spawnPoint.getBlockZ() ) );
-    
-    	if( loot == null ) return;
+    	LootChest loot;
+    	try {
+    		loot = new LootChest( instance, info );
+    	} catch ( LootChest.InvalidLootException e ) {
+    		
+    		getLogger().warning( "Couldn't spawn loot chest: " + e.getMessage() );
+    		return;
+    	}
     	
     	instance.addLootChest( loot );
     }

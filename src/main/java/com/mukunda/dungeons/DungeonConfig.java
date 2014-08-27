@@ -25,6 +25,7 @@ public class DungeonConfig {
 	public Cuboid area; 
 	public CooldownType cooldown;
 	public ArrayList<LootChestInfo> lootChests;
+	private String requiredDenizenFlag;
 	
 	public boolean enabled; 
 	
@@ -62,6 +63,8 @@ public class DungeonConfig {
 		//maxPlayers = config.getInt( "max_players", 1 ); 
 		enabled = config.getBoolean( "enabled", false );
 		
+		requiredDenizenFlag = config.getString( "denizen_key" );
+		
 		loadLootChests( config );
 
 		options.loadFromConfig( config, "options" );
@@ -95,10 +98,11 @@ public class DungeonConfig {
 			config.set( "area.min", Dungeons.FormatConfigVector(area.min,true) );
 			config.set( "area.max", Dungeons.FormatConfigVector(area.max,true) );
 		} 
-		//config.set( "max_players", maxPlayers ); 
-		cooldown = CooldownType.fromString( config.getString( "cooldown" ) );
+
+		config.set( "denizen_key", requiredDenizenFlag );
 		config.set( "cooldown", cooldown.toString() );
 		config.set( "enabled", enabled );
+		
 		
 		saveLootChests(config);
 		
@@ -138,8 +142,9 @@ public class DungeonConfig {
 			Vector spawn, source;
 			spawn = Dungeons.ParseConfigVector(config.getString( "loot." + key + ".spawn" ));
 			source = Dungeons.ParseConfigVector(config.getString( "loot." + key + ".source" ));
+			boolean giveAll = config.getBoolean( "loot." + key + ".give_all" );
 			if( spawn == null || source == null ) continue;
-			lootChests.add( new LootChestInfo(key, spawn, source) );
+			lootChests.add( new LootChestInfo(key, spawn, source, giveAll ) );
 			
 		}
 	}
@@ -149,6 +154,7 @@ public class DungeonConfig {
 		for( LootChestInfo info : lootChests ) {
 			config.set( "loot." + info.name + ".spawn", Dungeons.FormatConfigVector(info.spawnPoint,true) );
 			config.set( "loot." + info.name + ".source", Dungeons.FormatConfigVector(info.sourcePoint,true) );
+			config.set( "loot." + info.name + ".give_all", info.giveAll ? "yes":"no" );
 		}
 	}
 	
@@ -169,5 +175,16 @@ public class DungeonConfig {
 	
 	public List<LootChestInfo> getLootChestList() {
 		return lootChests;
+	}
+	
+	public String getDenizenKey() {
+		if( requiredDenizenFlag != null && !requiredDenizenFlag.isEmpty() ) {
+			return requiredDenizenFlag;
+		}
+		return null;
+	}
+	
+	public void setDenizenKey( String key ) {
+		requiredDenizenFlag = key;
 	}
 }

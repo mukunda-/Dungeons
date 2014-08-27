@@ -1,6 +1,5 @@
 package com.mukunda.dungeons;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,6 +19,7 @@ public class UserData {
 	
 	private class DataEntry {
 		
+		@SuppressWarnings("unused")
 		public UUID id;
 		
 		// dungeon name -> last completed day

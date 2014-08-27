@@ -43,6 +43,10 @@
          <name>Comphenix Repository</name>
          <url>http://repo.comphenix.net/content/groups/public</url>
        </repository>
+       <repository>
+           <id>citizens</id>
+           <url>http://repo.citizensnpcs.co</url>
+       </repository>
    </repositories>
    
 	<dependencies>
@@ -104,6 +108,13 @@
           <version>3.1.0</version>
           <scope>provided</scope>
         </dependency>
+        <dependency>
+			<groupId>net.aufdemrand</groupId>
+			<artifactId>denizen</artifactId>
+			<version>0.9.5-SNAPSHOT</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
 	</dependencies>
    
    <properties>

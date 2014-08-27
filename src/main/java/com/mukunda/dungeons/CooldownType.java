@@ -6,6 +6,8 @@ public enum CooldownType {
 	WEEK,	// RESETS EVERY WEEK
 	MANUAL; // RESETS WHEN AN ADMIN PUSHES A BUTTON
 	
+	int value;
+	
 	public static CooldownType fromString( String type ) {
 		if( type == null ) {
 			return NONE;
@@ -23,7 +25,8 @@ public enum CooldownType {
 	}
 	
 	public String toString( ) {
-		switch( this ) {
+		
+		switch( this  ) {
 		case NONE:
 			return "none";
 		case DAY:
