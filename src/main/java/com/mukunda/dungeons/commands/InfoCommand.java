@@ -1,41 +1,40 @@
 package com.mukunda.dungeons.commands;
- 
-import org.bukkit.command.CommandSender;
 
+import com.mukunda.cmdhandler.CommandGroup;
+import com.mukunda.cmdhandler.CommandHandler;
 import com.mukunda.dungeons.DungeonConfig;
- 
 
-public class InfoCommand extends DungeonCommand {
-	public InfoCommand() {
-		super( "info", 1 ); 
+public class InfoCommand extends CommandHandler {
+	public InfoCommand( CommandGroup parent ) {
+		super( parent, "info", 1, false ); 
 	}
-	public void printSyntax( CommandSender sender ) {
-		Commands.reply( sender, "/dgn info <name>" );
+	public void printSyntax() {
+		reply( "/dgn info <name>" );
 	}
-	public void printUsage( CommandSender sender ) {
-		Commands.reply( sender, "Usage: /dgn info <name>" );
-		Commands.reply( sender, "Displays info about a dungeon." );
+	public void printUsage() {
+		reply( "Usage: /dgn info <name>" );
+		reply( "Displays info about a dungeon." );
 	}
-	public void run( CommandSender sender, String[] args ) {
-		DungeonConfig config = CommandHelper.getDungeonConfig( sender, args[1] ); 
+	public void run( String[] args ) {
+		DungeonConfig config = CommandHelper.getDungeonConfig( this, args[1] ); 
 		if( config == null ) return;
-		Commands.reply( sender, "Info about \"" + config.name +"\"" );
+		reply( "Info about \"" + config.name +"\"" );
 		
-		Commands.reply( sender, "Enabled: " + (config.enabled ? "True" : "False") );
+		reply( "Enabled: " + (config.enabled ? "True" : "False") );
 		
 		if( config.entryPortalWorld == null )
-			Commands.reply( sender, "Entry portal not set." );
+			reply( "Entry portal not set." );
 		else
-			Commands.reply( sender, "Entry portal world: " + config.entryPortalWorld );
+			reply( "Entry portal world: " + config.entryPortalWorld );
 		
 		if( config.exitPointWorld == null )
-			Commands.reply( sender, "Exit point not set." );
+			reply( "Exit point not set." );
 		
 		if( config.area == null ) 
-			Commands.reply( sender, "Dungeon AREA not set." );
+			reply( "Dungeon AREA not set." );
 				
 		if( config.options.getMaxPlayers() < 1 )
-			Commands.reply( sender, "Dungeon max players is not set." );
+			reply( "Dungeon max players is not set." );
 		
 	}
 }

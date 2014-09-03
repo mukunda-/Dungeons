@@ -1,9 +1,8 @@
 package com.mukunda.dungeons.commands;
 
-import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import org.bukkit.Bukkit;  
 
+import com.mukunda.cmdhandler.CommandHandler;
 import com.mukunda.dungeons.DungeonConfig;
 import com.mukunda.dungeons.Dungeons;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
@@ -12,24 +11,24 @@ import com.sk89q.worldedit.bukkit.selections.Selection;
 
 public final class CommandHelper {
 
-	public static Selection getWorldEditCuboidSelection( CommandSender sender ){
+	public static Selection getWorldEditCuboidSelection( CommandHandler source ){
 		WorldEditPlugin worldEdit = (WorldEditPlugin) Bukkit.getServer().getPluginManager().getPlugin("WorldEdit");
-		Selection selection = worldEdit.getSelection( (Player)sender );
+		Selection selection = worldEdit.getSelection( source.getPlayer() );
 		if( selection == null ) {
-			Commands.reply( sender, "You need to make a WorldEdit selection." );
+			source.reply( "You need to make a WorldEdit selection." );
 			return null;
 		}
 		if( !(selection instanceof CuboidSelection) ){
-			Commands.reply( sender, "You need to make a CUBOID selection." );
+			source.reply( "You need to make a CUBOID selection." );
 			return null;
 		}
 		return selection;
 	}
 	
-	public static DungeonConfig getDungeonConfig( CommandSender sender, String name ) {
+	public static DungeonConfig getDungeonConfig( CommandHandler source, String name ) {
 		DungeonConfig config = Dungeons.getContext().findConfig( name );
 		if( config == null ) {
-			Commands.reply( sender, "Config doesn't exist." );
+			source.reply( "Config doesn't exist." );
 		}
 		return config;
 		

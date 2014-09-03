@@ -1,25 +1,26 @@
 package com.mukunda.dungeons.commands;
 
-import org.bukkit.command.CommandSender;
 
+import com.mukunda.cmdhandler.CommandGroup;
+import com.mukunda.cmdhandler.CommandHandler;
 import com.mukunda.dungeons.CooldownType;
 import com.mukunda.dungeons.DungeonConfig;
 
 
-public class CooldownCommand extends DungeonCommand {
-	public CooldownCommand() {
-		super( "cooldown", 2 );
+public class CooldownCommand extends CommandHandler {
+	public CooldownCommand( CommandGroup parent ) {
+		super( parent, "cooldown", 2, false );
 	}
-	public void printSyntax( CommandSender sender ) {
-		Commands.reply( sender, "/dgn cooldown <name> <cooldown>" );
+	public void printSyntax() {
+		reply( "/dgn cooldown <name> <cooldown>" );
 	}
-	public void printUsage( CommandSender sender ) {
-		Commands.reply( sender, "Usage: /dgn cooldown <name> <cooldown>" );
-		Commands.reply( sender, "Sets a cooldown for a dungeon." );
-		Commands.reply( sender, "<cooldown> can be NONE, DAY, or WEEK" );
+	public void printUsage() {
+		reply( "Usage: /dgn cooldown <name> <cooldown>" );
+		reply( "Sets a cooldown for a dungeon." );
+		reply( "<cooldown> can be NONE, DAY, or WEEK" );
 	}
-	public void run( CommandSender sender, String[] args ) {
-		DungeonConfig config = CommandHelper.getDungeonConfig( sender, args[1] );
+	public void run( String[] args ) {
+		DungeonConfig config = CommandHelper.getDungeonConfig( this, args[1] );
 		if( config == null ) return;
 		  
 		if( args[2].equalsIgnoreCase("none") ) {
@@ -30,11 +31,11 @@ public class CooldownCommand extends DungeonCommand {
 		} else if( args[2].equalsIgnoreCase("week") ) {
 			config.cooldown = CooldownType.WEEK;
 		} else {
-			Commands.reply( sender, "Unknown cooldown arg." );
+			reply( "Unknown cooldown arg." );
 			return;
 		}
 
-		Commands.reply( sender, "Set dungeon cooldown for \""+config.name+"\" to "+config.cooldown.toString()+"." );
+		reply( "Set dungeon cooldown for \""+config.name+"\" to "+config.cooldown.toString()+"." );
 
 		config.save();
 	}

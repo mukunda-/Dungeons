@@ -1,31 +1,31 @@
 package com.mukunda.dungeons.commands;
 
-import org.bukkit.command.CommandSender;
-
+import com.mukunda.cmdhandler.CommandGroup;
+import com.mukunda.cmdhandler.CommandHandler;
 import com.mukunda.dungeons.DungeonConfig;
 import com.mukunda.dungeons.Dungeons;
 
-public class ListCommand extends DungeonCommand {
-	public ListCommand(  ) {
-		super( "list", 0 ); 
+public class ListCommand extends CommandHandler {
+	public ListCommand( CommandGroup parent ) {
+		super( parent, "list", 0, false ); 
 	}
-	public void printSyntax( CommandSender sender ) {
-		Commands.reply( sender, "/dgn list" );
+	public void printSyntax() {
+		reply( "/dgn list" );
 	}
-	public void printUsage( CommandSender sender ) {
-		Commands.reply( sender, "Usage: /dgn list" );
-		Commands.reply( sender, "Lists registered dungeons." );
+	public void printUsage() {
+		reply( "Usage: /dgn list" );
+		reply( "Lists registered dungeons." );
 	}
-	public void run( CommandSender sender, String[] args ) {
+	public void run( String[] args ) {
  
 		if( Dungeons.getContext().configs.size() == 0 ) {
-			Commands.reply( sender, "There are no registered dungeons." );
+			reply( "There are no registered dungeons." );
 			return;
 		}
 		
 		for( DungeonConfig config : Dungeons.getContext().configs ) {
-			Commands.reply( sender, config.name );
+			reply( config.name );
 		}
-		Commands.reply( sender, Dungeons.getContext().configs.size() + " total." );
+		reply( Dungeons.getContext().configs.size() + " total." );
 	}
 }

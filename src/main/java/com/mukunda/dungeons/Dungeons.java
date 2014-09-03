@@ -56,6 +56,8 @@ import java.io.IOException;
 
 
 
+
+import com.mukunda.cmdhandler.CommandGroup;
 import com.mukunda.dungeons.commands.AreaCommand;
 import com.mukunda.dungeons.commands.Commands;
 import com.mukunda.dungeons.commands.CooldownCommand;
@@ -101,7 +103,7 @@ public final class Dungeons extends JavaPlugin implements Listener {
 	
 	public ArrayList<DungeonConfig> configs;
 	public DungeonOptions defaultOptions;
-	public Commands commands;
+	public CommandGroup commands;
 	public List<String> startupCommands;
 	public List<String> unloadCommands;
 	
@@ -296,43 +298,38 @@ public final class Dungeons extends JavaPlugin implements Listener {
 		cleanupDungeons();
 		
 		context = this;
-		commands = new Commands();
+		commands = new CommandGroup( "dgn", ChatColor.RED + "[Dungeons] " + ChatColor.RESET );
 		configs = new ArrayList<DungeonConfig>();
 		instances = new ArrayList<Instance>();
 		instanceMap = new HashMap<String,Instance>();
 		new File( getDataFolder(), "configs" ).mkdirs();
 		if( !loadConfigs() ) return; // disk failure, crash plugin
 		
-		
 	    getServer().getPluginManager().registerEvents(this, this);
 		
+		new CreateCommand( commands );
+		new DeleteCommand( commands );
+		new EntryPointCommand( commands );
+		new EntryPortalCommand( commands );
+		new ExitPointCommand( commands );
+		new ExitPortalCommand( commands );
+		new AreaCommand( commands );
+		new DisableCommand( commands );
+		new EnableCommand( commands );
+		new TeleportCommand( commands );
+		new InfoCommand( commands );
+		new ListCommand( commands );
 		
-		commands.register( new HelpCommand() );
-		commands.register( new CreateCommand() );
-		commands.register( new DeleteCommand() );
-		commands.register( new EntryPointCommand() );
-		commands.register( new EntryPortalCommand() );
-		commands.register( new ExitPointCommand() );
-		commands.register( new ExitPortalCommand() );
-		commands.register( new AreaCommand() );
-		commands.register( new DisableCommand() );
-		commands.register( new EnableCommand() );
-		commands.register( new TeleportCommand() );
-		commands.register( new InfoCommand() );
-		commands.register( new ListCommand() );
-		
-		commands.register( new LootChestCommand() );
-		commands.register( new LootListCommand() );
-		commands.register( new LootTagCommand() );
-		commands.register( new LootUnlinkCommand() );
-		commands.register( new CooldownCommand() );
-		//commands.register( new SaveCommand( this ) );
-		commands.register( new DenizenKeyCommand() );
+		new LootChestCommand( commands );
+		new LootListCommand( commands );
+		new LootTagCommand( commands );
+		new LootUnlinkCommand( commands );
+		new CooldownCommand( commands );
+		new DenizenKeyCommand( commands );
 		
 		// TODO slow gnome down.
 		new Gnome().runTaskTimer( this, 20, 5 );
 		
-
 		List<String> loadCommands = getConfig().getStringList( "Dungeons.pluginload_commands" );
 		if( loadCommands != null ) {
 			for( String cmd: loadCommands ) {
@@ -361,22 +358,19 @@ public final class Dungeons extends JavaPlugin implements Listener {
     //---------------------------------------------------------------------------------------------
     @Override
     public boolean onCommand( CommandSender sender, Command cmd, String label, String[] args ) {
-    	if( cmd.getName().equalsIgnoreCase("dgn") ) {
-    		// TODO (debug code)
-    		if( args.length == 1 && args[0].equals("test") ) {
-    			
-    			Player player = (Player)sender;
-    			Instance inst = getInstance( player.getWorld() );
-    			if( inst == null ) return true;
-    			
-    			spawnLootChest( player.getWorld().getName(), "testloot" );
-    			
-    			return true;
-    		}
-    		commands.onCommand( sender, cmd, label, args );
-    		return true;
-    	}
-    	return false;
+		// TODO (debug code)
+		if( args.length == 1 && args[0].equals("test") ) {
+			
+			Player player = (Player)sender;
+			Instance inst = getInstance( player.getWorld() );
+			if( inst == null ) return true;
+			
+			spawnLootChest( player.getWorld().getName(), "testloot" );
+			
+			return true;
+		}
+    		
+    	return commands.onCommand( sender, cmd, label, args );
     }
     
     private void showCooldownMessage( Player player, DungeonConfig config ) {

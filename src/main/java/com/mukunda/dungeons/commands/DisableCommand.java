@@ -1,28 +1,28 @@
 package com.mukunda.dungeons.commands;
 
-import org.bukkit.command.CommandSender;
-
+import com.mukunda.cmdhandler.CommandGroup;
+import com.mukunda.cmdhandler.CommandHandler;
 import com.mukunda.dungeons.DungeonConfig;
 
-public class DisableCommand extends DungeonCommand {
-	public DisableCommand() {
-		super( "disable", 1 );
+public class DisableCommand extends CommandHandler {
+	public DisableCommand( CommandGroup parent ) {
+		super( parent, "disable", 1, false );
 	}
-	public void printSyntax( CommandSender sender ) {
-		Commands.reply( sender, "/dgn disable <name>" );
+	public void printSyntax() {
+		reply( "/dgn disable <name>" );
 	}
-	public void printUsage( CommandSender sender ) {
-		Commands.reply( sender, "Usage: /dgn disable <name>" );
-		Commands.reply( sender, "Disables a dungeon for maintenance. People will not be able to enter it." );
+	public void printUsage() {
+		reply( "Usage: /dgn disable <name>" );
+		reply( "Disables a dungeon for maintenance. People will not be able to enter it." );
 	}
-	public void run( CommandSender sender, String[] args ) {
-		DungeonConfig config = CommandHelper.getDungeonConfig( sender, args[1] );
+	public void run( String[] args ) {
+		DungeonConfig config = CommandHelper.getDungeonConfig( this, args[1] );
 		if( config == null ) return;
 		
 		if( !config.enabled )
-			Commands.reply( sender, "That dungeon is already disabled." );
+			reply( "That dungeon is already disabled." );
 		else
-			Commands.reply( sender, "Disabled dungeon." );
+			reply( "Disabled dungeon." );
 		config.enabled = false;
 		config.save();
 	}
