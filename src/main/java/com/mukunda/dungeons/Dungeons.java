@@ -48,36 +48,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.io.IOException;
   
-
-
-
-
-
-
-
-
-
-import com.mukunda.cmdhandler.CommandGroup;
-import com.mukunda.dungeons.commands.AreaCommand;
-import com.mukunda.dungeons.commands.Commands;
-import com.mukunda.dungeons.commands.CooldownCommand;
-import com.mukunda.dungeons.commands.CreateCommand;
-import com.mukunda.dungeons.commands.DeleteCommand;
-import com.mukunda.dungeons.commands.DenizenKeyCommand;
-import com.mukunda.dungeons.commands.DisableCommand;
-import com.mukunda.dungeons.commands.EnableCommand;
-import com.mukunda.dungeons.commands.EntryPointCommand;
-import com.mukunda.dungeons.commands.EntryPortalCommand;
-import com.mukunda.dungeons.commands.ExitPointCommand;
-import com.mukunda.dungeons.commands.ExitPortalCommand;
-import com.mukunda.dungeons.commands.HelpCommand;
-import com.mukunda.dungeons.commands.InfoCommand;
-import com.mukunda.dungeons.commands.ListCommand;
-import com.mukunda.dungeons.commands.LootChestCommand;
-import com.mukunda.dungeons.commands.LootListCommand;
-import com.mukunda.dungeons.commands.LootTagCommand;
-import com.mukunda.dungeons.commands.LootUnlinkCommand;
-import com.mukunda.dungeons.commands.TeleportCommand;
 import com.mukunda.parties.Parties;
 import com.mukunda.parties.Party;
 import com.mukunda.parties.PartyEvent;
@@ -103,7 +73,7 @@ public final class Dungeons extends JavaPlugin implements Listener {
 	
 	public ArrayList<DungeonConfig> configs;
 	public DungeonOptions defaultOptions;
-	public CommandGroup commands;
+	public Commands commands;
 	public List<String> startupCommands;
 	public List<String> unloadCommands;
 	
@@ -298,7 +268,7 @@ public final class Dungeons extends JavaPlugin implements Listener {
 		cleanupDungeons();
 		
 		context = this;
-		commands = new CommandGroup( "dgn", ChatColor.RED + "[Dungeons] " + ChatColor.RESET );
+		
 		configs = new ArrayList<DungeonConfig>();
 		instances = new ArrayList<Instance>();
 		instanceMap = new HashMap<String,Instance>();
@@ -306,26 +276,9 @@ public final class Dungeons extends JavaPlugin implements Listener {
 		if( !loadConfigs() ) return; // disk failure, crash plugin
 		
 	    getServer().getPluginManager().registerEvents(this, this);
+	    
+	    commands = new Commands();
 		
-		new CreateCommand( commands );
-		new DeleteCommand( commands );
-		new EntryPointCommand( commands );
-		new EntryPortalCommand( commands );
-		new ExitPointCommand( commands );
-		new ExitPortalCommand( commands );
-		new AreaCommand( commands );
-		new DisableCommand( commands );
-		new EnableCommand( commands );
-		new TeleportCommand( commands );
-		new InfoCommand( commands );
-		new ListCommand( commands );
-		
-		new LootChestCommand( commands );
-		new LootListCommand( commands );
-		new LootTagCommand( commands );
-		new LootUnlinkCommand( commands );
-		new CooldownCommand( commands );
-		new DenizenKeyCommand( commands );
 		
 		// TODO slow gnome down.
 		new Gnome().runTaskTimer( this, 20, 5 );
